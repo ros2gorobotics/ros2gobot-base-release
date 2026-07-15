@@ -19,7 +19,7 @@
 # Requirements
 
 * Ubuntu 24.04
-* ROS 2 Kilted (or supported distribution)
+* ROS 2 JAZZY (or supported distribution)
 * `ros2_control`
 * A valid `license.key`
 
