@@ -5,6 +5,10 @@ set -e
 VERSION="1.0.0"
 PACKAGE_NAME="ros2gobot_base"
 
+# 🌟 ตั้งค่าไฟล์ Release และ URL สำหรับดาวน์โหลด
+RELEASE_FILE="ros2go-base-release.tar.gz"
+DOWNLOAD_URL="https://your-server.com/downloads/${RELEASE_FILE}" # เปลี่ยนเป็น URL จริงของคุณ
+
 INSTALL_ROOT="/opt/ros2go"
 INSTALL_DIR="${INSTALL_ROOT}/software/${PACKAGE_NAME}"
 
@@ -25,7 +29,6 @@ echo
 # ------------------------------------------------
 # Check root permission
 # ------------------------------------------------
-
 if [ "$EUID" -ne 0 ]; then
     echo "[ERROR] Please run installer with sudo"
     echo
@@ -34,11 +37,9 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-
 # ------------------------------------------------
 # Check Operating System
 # ------------------------------------------------
-
 if [ ! -f /etc/os-release ]; then
     echo "[ERROR] Cannot detect operating system"
     exit 1
@@ -49,16 +50,13 @@ source /etc/os-release
 echo "[INFO] Operating System:"
 echo "       $PRETTY_NAME"
 
-
 if [[ "$ID" != "ubuntu" ]]; then
     echo "[WARNING] This installer is designed for Ubuntu"
 fi
 
-
 # ------------------------------------------------
 # Detect ROS 2 Distribution
 # ------------------------------------------------
-
 ROS_DISTRO=""
 
 for distro in humble jazzy kilted iron rolling
@@ -69,73 +67,72 @@ do
     fi
 done
 
-
 if [ -z "$ROS_DISTRO" ]; then
-
     echo
     echo "[ERROR] ROS 2 installation not found."
     echo "Please install ROS 2 before continuing."
     exit 1
-
 fi
-
 
 echo "[OK] ROS 2 detected:"
 echo "     ${ROS_DISTRO}"
 
-
 # ------------------------------------------------
-# Install Package
+# Download and Install Package
 # ------------------------------------------------
-
 echo
-echo "[INFO] Installing ${PACKAGE_NAME}..."
+echo "[INFO] Preparing ${PACKAGE_NAME}..."
 
+# 🌟 1. ตรวจสอบและดาวน์โหลดไฟล์ Release
+if [ -f "./${RELEASE_FILE}" ]; then
+    echo "[INFO] Found local release file: ${RELEASE_FILE}"
+    cp "./${RELEASE_FILE}" "/tmp/${RELEASE_FILE}"
+else
+    echo "[INFO] Local release file not found. Downloading from server..."
+    # โหลดไฟล์และแสดงหลอดความคืบหน้า (Progress bar)
+    wget -q --show-progress -O "/tmp/${RELEASE_FILE}" "${DOWNLOAD_URL}"
+    
+    if [ $? -ne 0 ]; then
+        echo "[ERROR] Failed to download release file."
+        exit 1
+    fi
+fi
 
 mkdir -p ${INSTALL_ROOT}/software
 
-
 if [ -d "${INSTALL_DIR}" ]; then
-
     echo "[INFO] Existing installation detected"
     echo "[INFO] Removing old version..."
-
     rm -rf ${INSTALL_DIR}
-
 fi
 
+echo "[INFO] Extracting files to ${INSTALL_ROOT}/software/ ..."
+# 🌟 2. แตกไฟล์ .tar.gz (สมมติว่าข้างในแตกออกมาเป็นโฟลเดอร์ ros2gobot_base พอดี)
+tar -xzf "/tmp/${RELEASE_FILE}" -C ${INSTALL_ROOT}/software/
 
-cp -r ${PACKAGE_NAME} ${INSTALL_DIR}
-
+# ลบไฟล์ขยะ
+rm -f "/tmp/${RELEASE_FILE}"
 
 echo "[OK] Package installed:"
 echo "     ${INSTALL_DIR}"
 
-
 # ------------------------------------------------
 # Configure Shared Library
 # ------------------------------------------------
-
 echo
 echo "[INFO] Registering shared libraries..."
 
-
 echo "${INSTALL_DIR}/lib" > ${LD_CONFIG}
-
 
 ldconfig
 
-
 echo "[OK] Library configured"
-
 
 # ------------------------------------------------
 # Create ROS Environment Setup
 # ------------------------------------------------
-
 echo
 echo "[INFO] Creating ROS environment setup..."
-
 
 cat > ${PROFILE_FILE} <<EOF
 #!/bin/bash
@@ -150,71 +147,50 @@ source ${INSTALL_DIR}/local_setup.bash
 
 EOF
 
-
 chmod 644 ${PROFILE_FILE}
-
 
 echo "[OK] Environment configured:"
 echo "     ${PROFILE_FILE}"
 
-
 # ------------------------------------------------
 # Create License Directory
 # ------------------------------------------------
-
 echo
 echo "[INFO] Creating license directory..."
 
-
 mkdir -p ${LICENSE_DIR}
-
-
 chmod 755 ${LICENSE_DIR}
-
 
 echo "[OK] License directory:"
 echo "     ${LICENSE_DIR}"
 
-
 # ------------------------------------------------
 # Create Maps Directory
 # ------------------------------------------------
-
 echo
 echo "[INFO] Creating maps directory..."
 
-
 mkdir -p ${MAPS_DIR}
-
-
 chmod 777 ${MAPS_DIR}
-
 
 echo "[OK] Maps directory:"
 echo "     ${MAPS_DIR}"
 
-
 # ------------------------------------------------
 # Finish
 # ------------------------------------------------
-
 echo
 echo "================================================"
 echo " Installation completed successfully!"
 echo "================================================"
 echo
-
 echo "Installed package:"
 echo " ${INSTALL_DIR}"
-
 echo
-
 echo "Created directories:"
 echo " ${LICENSE_DIR}"
 echo " ${MAPS_DIR}"
-
 echo
-
 echo "Next steps:"
 echo
 echo "1. Activate your license"
