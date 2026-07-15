@@ -175,7 +175,7 @@ Launch your robot normally.
 Example:
 
 ```bash
-ros2 launch <your_package> <your_launch_file>.launch.py
+ros2 launch ros2gobot_bringup ros2gobot_robot.launch.py
 ```
 
 ---
