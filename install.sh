@@ -2,11 +2,12 @@
 
 set -e
 
-VERSION="1.0.0"
+# รับค่า Version จาก Argument แรก (ถ้าไม่ระบุ จะใช้ค่าเริ่มต้นคือ 1.0.0)
+VERSION="${1:-1.0.0}"
 PACKAGE_NAME="ros2gobot_base"
 
-RELEASE_FILE="ros2gobot_base_v1.0.0.tar.gz"
-DOWNLOAD_URL="https://github.com/ros2gorobotics/ros2gobot-base-release/releases/download/v1.0.0/${RELEASE_FILE}"
+RELEASE_FILE="ros2gobot_base_v${VERSION}.tar.gz"
+DOWNLOAD_URL="https://github.com/ros2gorobotics/ros2gobot-base-release/releases/download/v${VERSION}/${RELEASE_FILE}"
 
 INSTALL_ROOT="/opt/ros2go"
 INSTALL_DIR="${INSTALL_ROOT}/software/${PACKAGE_NAME}"
@@ -24,7 +25,6 @@ echo "             ${PACKAGE_NAME} v${VERSION}"
 echo "================================================"
 echo
 
-
 # ------------------------------------------------
 # Check root permission
 # ------------------------------------------------
@@ -33,6 +33,7 @@ if [ "$EUID" -ne 0 ]; then
     echo
     echo "Example:"
     echo "  sudo ./install.sh"
+    echo "  sudo ./install.sh 1.1.0  # สำหรับอัปเดตเป็นเวอร์ชัน 1.1.0"
     exit 1
 fi
 
@@ -80,9 +81,9 @@ echo "     ${ROS_DISTRO}"
 # Download and Install Package
 # ------------------------------------------------
 echo
-echo "[INFO] Preparing ${PACKAGE_NAME}..."
+echo "[INFO] Preparing ${PACKAGE_NAME} v${VERSION}..."
 
-# 🌟 1. ตรวจสอบและดาวน์โหลดไฟล์ Release
+# ตรวจสอบและดาวน์โหลดไฟล์ Release
 if [ -f "./${RELEASE_FILE}" ]; then
     echo "[INFO] Found local release file: ${RELEASE_FILE}"
     cp "./${RELEASE_FILE}" "/tmp/${RELEASE_FILE}"
@@ -92,21 +93,21 @@ else
     wget -q --show-progress -O "/tmp/${RELEASE_FILE}" "${DOWNLOAD_URL}"
     
     if [ $? -ne 0 ]; then
-        echo "[ERROR] Failed to download release file."
+        echo "[ERROR] Failed to download release file. Check the version or URL."
         exit 1
     fi
 fi
 
 mkdir -p ${INSTALL_ROOT}/software
 
+# เช็คซอฟต์แวร์เวอร์ชันเก่าและลบทิ้งเพื่อลงใหม่
 if [ -d "${INSTALL_DIR}" ]; then
-    echo "[INFO] Existing installation detected"
-    echo "[INFO] Removing old version..."
+    echo "[INFO] Existing installation detected."
+    echo "[INFO] Removing old version to prepare for update..."
     rm -rf ${INSTALL_DIR}
 fi
 
 echo "[INFO] Extracting files to ${INSTALL_ROOT}/software/ ..."
-# 🌟 2. แตกไฟล์ .tar.gz (สมมติว่าข้างในแตกออกมาเป็นโฟลเดอร์ ros2gobot_base พอดี)
 tar -xzf "/tmp/${RELEASE_FILE}" -C ${INSTALL_ROOT}/software/
 
 # ลบไฟล์ขยะ
@@ -152,47 +153,49 @@ echo "[OK] Environment configured:"
 echo "     ${PROFILE_FILE}"
 
 # ------------------------------------------------
-# Create License Directory
+# Create License Directory (Check if exists)
 # ------------------------------------------------
 echo
-echo "[INFO] Creating license directory..."
-
-mkdir -p ${LICENSE_DIR}
-chmod 755 ${LICENSE_DIR}
-
-echo "[OK] License directory:"
-echo "     ${LICENSE_DIR}"
+if [ ! -d "${LICENSE_DIR}" ]; then
+    echo "[INFO] Creating license directory..."
+    mkdir -p ${LICENSE_DIR}
+    chmod 755 ${LICENSE_DIR}
+    echo "[OK] License directory created: ${LICENSE_DIR}"
+else
+    echo "[INFO] License directory already exists. Skipping creation."
+fi
 
 # ------------------------------------------------
-# Create Maps Directory
+# Create Maps Directory (Check if exists)
 # ------------------------------------------------
 echo
-echo "[INFO] Creating maps directory..."
-
-mkdir -p ${MAPS_DIR}
-chmod 777 ${MAPS_DIR}
-
-echo "[OK] Maps directory:"
-echo "     ${MAPS_DIR}"
+if [ ! -d "${MAPS_DIR}" ]; then
+    echo "[INFO] Creating maps directory..."
+    mkdir -p ${MAPS_DIR}
+    chmod 777 ${MAPS_DIR}
+    echo "[OK] Maps directory created: ${MAPS_DIR}"
+else
+    echo "[INFO] Maps directory already exists. Skipping creation."
+fi
 
 # ------------------------------------------------
 # Finish
 # ------------------------------------------------
 echo
 echo "================================================"
-echo " Installation completed successfully!"
+echo " Installation/Update completed successfully!"
 echo "================================================"
 echo
 echo "Installed package:"
-echo " ${INSTALL_DIR}"
+echo " ${INSTALL_DIR} (v${VERSION})"
 echo
-echo "Created directories:"
+echo "Directories active:"
 echo " ${LICENSE_DIR}"
 echo " ${MAPS_DIR}"
 echo
 echo "Next steps:"
 echo
-echo "1. Activate your license"
+echo "1. Activate your license (if not already done)"
 echo "   See README.md section: License Activation"
 echo
 echo "2. Open a new terminal or run:"
