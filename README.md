@@ -34,7 +34,9 @@ Download the latest package from the GitHub **Releases** page.
 Example:
 
 ```bash
-wget https://github.com/ros2gorobotics/ros2gobot-base-release/releases/download/v1.0.0/ros2gobot_base_v1.0.0.tar.gz
+wget https://raw.githubusercontent.com/ros2gorobotics/ros2gobot-base-release/main/install.sh
+chmod +x install.sh
+sudo ./install.sh
 ```
 
 ---
