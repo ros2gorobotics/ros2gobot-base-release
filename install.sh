@@ -5,7 +5,7 @@ set -e
 VERSION="1.0.0"
 PACKAGE_NAME="ros2gobot_base"
 
-RELEASE_FILE="ros2go-base-release.tar.gz"
+RELEASE_FILE="ros2gobot_base_v1.0.0.tar.gz"
 DOWNLOAD_URL="https://github.com/ros2gorobotics/ros2gobot-base-release/releases/download/v1.0.0/${RELEASE_FILE}"
 
 INSTALL_ROOT="/opt/ros2go"
